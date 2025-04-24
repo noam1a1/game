@@ -1,0 +1,20 @@
+package org.example;
+
+import javax.swing.*;
+
+public class Main {
+    public static final int WINDOW_WIDTH = 1080;
+    public static final int WINDOW_HEIGHT = 720;
+    public static void main(String[] args) {
+        JFrame window = new JFrame("Mortal Madmach");
+        GameManager manager = new GameManager();
+        window.setContentPane(manager);
+        window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        window.setResizable(false);
+        window.pack();
+        window.setLocationRelativeTo(null);
+
+        window.setVisible(true);
+
+    }
+}
