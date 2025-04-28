@@ -21,7 +21,7 @@ public class LauncherPanel extends JPanel {
         startButton.setFocusPainted(false);
         startButton.setOpaque(false);
         startButton.setRolloverIcon(startHoverIcon);
-        startButton.addActionListener(e -> manager.showScreen("game"));
+        startButton.addActionListener(e -> manager.showScreen("select"));
         this.add(startButton);
 
         JButton howToPlayButton = new JButton(howToPlayIcon);

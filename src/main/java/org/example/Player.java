@@ -12,16 +12,19 @@ public class Player {
     private Direction direction;
     private int type;
     private final HealthBar healthBar;
+    private final SpecialAttackBar specialAttackBar;
     private JLabel playerNameLabel;
     private String name;
     private boolean attacking = false;
     private long lastAttackTime = 0;
-    private final int attackCooldown = 500; // במילישניות
+    private final int attackCooldown = 500;
     private final int attackDamage = 10;
+    private Direction moveDirection = null;
+    private boolean isPlayer1;
 
 
 
-    public Player(int startX, int startY, int type) {
+    public Player(int startX, int startY, int type, boolean isPlayer1) {
         this.x = startX;
         this.y = startY;
         this.currentHealth = maxHealth;
@@ -38,6 +41,8 @@ public class Player {
         this.direction = Direction.RIGHT;
         this.currentImage = loadImage(imageName + "_1.png");
         this.healthBar = new HealthBar(() -> this.currentHealth, () -> this.maxHealth);
+        this.specialAttackBar = new SpecialAttackBar();
+        this.isPlayer1 = isPlayer1;
 
 
 
@@ -69,10 +74,12 @@ public class Player {
 
         }
 
-        if (this.type==1){
+        if (this.isPlayer1){
             healthBar.draw(g, 10, 20, Direction.LEFT);
+            specialAttackBar.draw(g, 233, 20, Direction.LEFT);
         }else {
             healthBar.draw(g, 820, 20, Direction.RIGHT);
+            specialAttackBar.draw(g, 807, 20, Direction.RIGHT);
 
         }
 
@@ -99,6 +106,7 @@ public class Player {
 
         if (getAttackBox().intersects(target.getHitbox())) {
             target.takeDamage(attackDamage);
+            specialAttackBar.addSpecial(0.2);
             System.out.println(name + " פגע ב-" + target.getName() + "!");
         } else {
             System.out.println(name + " פספס!");
@@ -106,6 +114,31 @@ public class Player {
 
         new Timer(attackCooldown, e -> attacking = false).start();
     }
+
+    public void specialAttack(Player target) {
+        long currentTime = System.currentTimeMillis();
+
+        if (attacking) return;
+        if (currentTime - lastAttackTime < attackCooldown) return;
+        if (specialAttackBar.canSAttack()) return;
+
+        attacking = true;
+        lastAttackTime = currentTime;
+
+        if (getAttackBox().intersects(target.getHitbox())) {
+            int specialDamage = attackDamage * 3;
+            target.takeDamage(specialDamage);
+            this.specialAttackBar.decreaseSpecial();
+            System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
+        } else {
+            System.out.println(name + " פספס במתקפה מיוחדת!");
+        }
+
+
+
+        new Timer(attackCooldown, e -> attacking = false).start();
+    }
+
 
 
     private Image loadImage(String filename) {
@@ -125,6 +158,30 @@ public class Player {
         int attackX = (direction == Direction.RIGHT) ? x + currentImage.getWidth(null) : x - width;
         return new Rectangle(attackX, y + 20, width, height);
     }
+    public int getCenterX() {
+        return x + currentImage.getWidth(null) / 2;
+    }
+
+    public void setMoveDirection(Direction direction) {
+        this.moveDirection = direction;
+    }
+
+    public Direction getMoveDirection() {
+        return moveDirection;
+    }
+
+    public void moveSmooth() {
+        if (moveDirection == Direction.LEFT) {
+            x -= speed;
+            direction = Direction.LEFT;
+            if (x < 0) x = 0;
+        } else if (moveDirection == Direction.RIGHT) {
+            x += speed;
+            direction = Direction.RIGHT;
+            if (x > 1080 - currentImage.getWidth(null)) x = 1080 - currentImage.getWidth(null);
+        }
+    }
+
 
 
 }

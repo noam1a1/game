@@ -37,7 +37,7 @@ public class HealthBar {
             g.drawImage(barImage, x, y, null);
         } else {
             Graphics2D g2 = (Graphics2D) g;
-            g2.drawImage(barImage, x + width, y, -width, height, null); // הפוך
+            g2.drawImage(barImage, x + width, y, -width, height, null);
         }
     }
 }
