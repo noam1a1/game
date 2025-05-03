@@ -59,6 +59,9 @@ public class SpecialAttackBar {
     public void addSpecial(double amount) {
         specialAmount = Math.min(specialAmount + amount, maxSpecial);
     }
+    public void resetSpecial() {
+        specialAmount = 0;
+    }
 
     public void decreaseSpecial() {
         specialAmount = Math.max(0, specialAmount - 1.0);

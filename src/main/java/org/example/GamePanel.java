@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 public class GamePanel extends JPanel {
@@ -13,9 +16,21 @@ public class GamePanel extends JPanel {
     private final Player player2;
     private JLabel playerNameLabel1;
     private JLabel playerNameLabel2;
+    private JLabel score;
     private Thread aiThread;
     private boolean aiRunning = true;
     private final Random random = new Random();
+    private List<Potion> potions = new ArrayList<>();
+    private Thread potionSpawnerThread;
+    private boolean spawnerRunning = true;
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private final int WIN_SCORE = 3;
+    private boolean roundActive = true;
+    private JLabel roundLabel;
+    private boolean roundStarting = false;
+
+
 
 
 
@@ -39,6 +54,23 @@ public class GamePanel extends JPanel {
         playerNameLabel2.setBounds(910, 30, 200, 30);
         add(playerNameLabel2);
 
+        score = new JLabel(player1Score + " : " + player2Score);
+        score.setFont(new Font("Impact", Font.BOLD, 30));
+        score.setForeground(Color.WHITE);
+        score.setBounds(500, 30, 200, 30);
+        add(score);
+
+        roundLabel = new JLabel("", SwingConstants.CENTER);
+        roundLabel.setFont(new Font("Impact", Font.BOLD, 60));
+        roundLabel.setForeground(Color.WHITE);
+        roundLabel.setBounds(0, 200, 1080, 100);
+        roundLabel.setVisible(true);
+        add(roundLabel);
+
+        startPotionSpawner();
+        resetRound();
+
+
         aiThread = new Thread(() -> {
             long lastDecisionTime = System.currentTimeMillis();
             while (aiRunning) {
@@ -49,7 +81,9 @@ public class GamePanel extends JPanel {
                     lastDecisionTime = now;
                 }
 
-                player2.moveSmooth();
+                if (!roundStarting) {
+                    player2.moveSmooth();
+                }
                 repaint();
 
                 try {
@@ -64,16 +98,28 @@ public class GamePanel extends JPanel {
 
         addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
+                if (roundStarting) return;
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_LEFT -> player1.moveLeft();
-                    case KeyEvent.VK_RIGHT -> player1.moveRight();
+                    case KeyEvent.VK_LEFT -> {
+                        player1.moveLeft();
+                        checkPotionCollision();
+
+                    }
+                    case KeyEvent.VK_RIGHT -> {
+                        player1.moveRight();
+                        checkPotionCollision();
+                    }
                     case KeyEvent.VK_X -> player1.takeDamage(5);
                     case KeyEvent.VK_C -> player1.buff(5);
                     case KeyEvent.VK_Q -> player1.attack(player2);
                     case KeyEvent.VK_R -> player1.specialAttack(player2);
+                    case KeyEvent.VK_V -> player1.specialAttackBuff(0.2);
+
 
                 }
                 repaint();
+                checkRoundEnd();
+
             }
         });
         SwingUtilities.invokeLater(this::requestFocusInWindow);
@@ -85,8 +131,60 @@ public class GamePanel extends JPanel {
         g.drawImage(ARENA_BG, 0, 0, getWidth(), getHeight(), this);
         player1.draw(g);
         player2.draw(g);
-
+        for (Potion potion : potions) {
+            potion.draw(g);
+        }
     }
+    private void checkPotionCollision() {
+        Rectangle playerBounds = player1.getHitbox(); // יש לו getHitbox()
+
+        Iterator<Potion> iterator = potions.iterator();
+        while (iterator.hasNext()) {
+            Potion potion = iterator.next();
+            if (playerBounds.intersects(potion.getBounds())) {
+                if (potion.getType() == PotionType.HEALTH) {
+                    player1.buff(20);
+                    System.out.println("אספת שיקוי חיים!");
+                } else if (potion.getType() == PotionType.SPECIAL) {
+                    player1.specialAttackBuff(1.0);
+                    System.out.println("אספת שיקוי מיוחד!");
+                }
+                iterator.remove();
+            }
+        }
+    }
+    private void spawnRandomPotion() {
+        PotionType type = random.nextBoolean() ? PotionType.HEALTH : PotionType.SPECIAL;
+
+        String imagePath = (type == PotionType.HEALTH)
+                ? "/images/health_potion.png"
+                : "/images/special_potion.png";
+
+        int x = random.nextInt(1080 - 40);
+        int y = random.nextInt(580 - 480 + 1) + 480;
+
+        potions.add(new Potion(imagePath, x, y, type));
+    }
+    private void startPotionSpawner() {
+        potionSpawnerThread = new Thread(() -> {
+            while (spawnerRunning) {
+                int time = random.nextInt(9000 - 5000 + 1) + 5000;
+                if (potions.size() < 4) {
+                    spawnRandomPotion();
+                }
+                try {
+                    Thread.sleep(time);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        potionSpawnerThread.start();
+    }
+
+
+
+
     @Override
     public void addNotify() {
         super.addNotify();
@@ -101,40 +199,13 @@ public class GamePanel extends JPanel {
         });
     }
 
-    private void chasePlayer() {
-        int distance = player2.getCenterX() - player1.getCenterX();
-        boolean makeMistake = random.nextInt(100) < 15;
-
-        if (Math.abs(distance) <= 100) {
-            if (!makeMistake) {
-                player2.attack(player1);
-            } else {
-
-                if (random.nextBoolean()) {
-                    player2.moveLeft();
-                } else {
-                    player2.moveRight();
-                }
-            }
-        } else if (distance > 0) {
-            if (!makeMistake) {
-                player2.moveLeft();
-            } else {
-                player2.moveRight();
-            }
-        } else {
-            if (!makeMistake) {
-                player2.moveRight();
-            } else {
-                player2.moveLeft();
-            }
-        }
-    }
 
     private void decideDirection() {
         int distance = player2.getCenterX() - player1.getCenterX();
         boolean makeMistake = random.nextInt(100) < 15;
         boolean chooseIdle = random.nextInt(100) < 10;
+
+        if (roundStarting) return;
 
         if (chooseIdle) {
             player2.setMoveDirection(null);
@@ -162,13 +233,100 @@ public class GamePanel extends JPanel {
             }
         }
     }
+    private void checkRoundEnd() {
+        if (!roundActive) return;
 
+        if (player1.getCurrentHealth() <= 0) {
+            player2Score++;
+            roundActive = false;
+            updateScoreLabel(Color.RED);
+            System.out.println("שחקן 2 ניצח ראונד!");
+            checkGameEnd();
+        } else if (player2.getCurrentHealth() <= 0) {
+            player1Score++;
+            roundActive = false;
+            updateScoreLabel(Color.GREEN);
+            System.out.println("שחקן 1 ניצח ראונד!");
+            checkGameEnd();
+        }
+    }
+    private void checkGameEnd() {
+        if (player1Score >= WIN_SCORE) {
+            JOptionPane.showMessageDialog(this, "שחקן 1 ניצח את המשחק!");
+            resetGame();
+        } else if (player2Score >= WIN_SCORE) {
+            JOptionPane.showMessageDialog(this, "שחקן 2 ניצח את המשחק!");
+            resetGame();
+        } else {
+            resetRound();
+        }
+    }
+    private void resetRound() {
+        player1.reset();
+        player2.reset();
+        updateScoreLabel();
+        roundActive = true;
+        showRoundLabel();
+    }
+    private void resetGame() {
+        player1Score = 0;
+        player2Score = 0;
+        roundStarting = true;
+        showRoundLabel();
+        score.setText(player1Score + " : " + player2Score);
+        score.setForeground(Color.WHITE);
+        score.repaint();
+
+        resetRound();
+    }
+    private void updateScoreLabel(Color color) {
+        score.setText(player1Score + " : " + player2Score);
+        score.setForeground(color);
+        score.repaint();
+
+        Timer resetColorTimer = new Timer(500, e -> {
+            score.setForeground(Color.WHITE);
+            score.repaint();
+        });
+        resetColorTimer.setRepeats(false);
+        resetColorTimer.start();
+    }
+    private void updateScoreLabel() {
+        updateScoreLabel(Color.WHITE);
+    }
+
+    private void showRoundLabel() {
+        roundStarting = true;
+
+        int roundNumber = player1Score + player2Score + 1;
+        String text;
+
+        if (player1Score == 0 && player2Score == 0) {
+            text = "ROUND 1";
+        } else if (roundNumber == 5 && player1Score < WIN_SCORE && player2Score < WIN_SCORE) {
+            text = "FINAL ROUND!";
+        } else {
+            text = "ROUND " + roundNumber;
+        }
+
+        roundLabel.setText(text);
+        roundLabel.setVisible(true);
+
+        new Timer(2000, e -> {
+            roundLabel.setVisible(false);
+            roundStarting = false;
+        }) {{
+            setRepeats(false);
+            start();
+        }};
+    }
 
 
     @Override
     public void removeNotify() {
         super.removeNotify();
         aiRunning = false;
+        spawnerRunning = false;
     }
 
     @Override

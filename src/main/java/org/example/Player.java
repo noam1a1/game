@@ -115,29 +115,62 @@ public class Player {
         new Timer(attackCooldown, e -> attacking = false).start();
     }
 
-    public void specialAttack(Player target) {
-        long currentTime = System.currentTimeMillis();
+//    public void specialAttack(Player target) {
+//        long currentTime = System.currentTimeMillis();
+//
+//        if (attacking) return;
+//        if (currentTime - lastAttackTime < attackCooldown) return;
+//        if (specialAttackBar.canSAttack()) return;
+//
+//        attacking = true;
+//        lastAttackTime = currentTime;
+//
+//        if (getAttackBox().intersects(target.getHitbox())) {
+//            int specialDamage = attackDamage * 3;
+//            target.takeDamage(specialDamage);
+//            this.specialAttackBar.decreaseSpecial();
+//            System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
+//        } else {
+//            System.out.println(name + " פספס במתקפה מיוחדת!");
+//        }
+//
+//
+//
+//        new Timer(attackCooldown, e -> attacking = false).start();
+//    }
+ public void specialAttack(Player target) {
+    System.out.println("ניסיתי מתקפה מיוחדת");
 
-        if (attacking) return;
-        if (currentTime - lastAttackTime < attackCooldown) return;
-        if (specialAttackBar.canSAttack()) return;
+    long currentTime = System.currentTimeMillis();
 
-        attacking = true;
-        lastAttackTime = currentTime;
-
-        if (getAttackBox().intersects(target.getHitbox())) {
-            int specialDamage = attackDamage * 3;
-            target.takeDamage(specialDamage);
-            this.specialAttackBar.decreaseSpecial();
-            System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
-        } else {
-            System.out.println(name + " פספס במתקפה מיוחדת!");
-        }
-
-
-
-        new Timer(attackCooldown, e -> attacking = false).start();
+    if (attacking) {
+        System.out.println("כבר תוקף!");
+        return;
     }
+    if (currentTime - lastAttackTime < attackCooldown) {
+        System.out.println("קירור לא נגמר!");
+        return;
+    }
+    if (!specialAttackBar.canSAttack()) {
+        System.out.println("הבר לא מלא!");
+        return;
+    }
+
+    attacking = true;
+    lastAttackTime = currentTime;
+
+    if (getAttackBox().intersects(target.getHitbox())) {
+        int specialDamage = attackDamage * 3;
+        target.takeDamage(specialDamage);
+        specialAttackBar.decreaseSpecial();
+        System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
+    } else {
+        System.out.println(name + " פספס במתקפה מיוחדת!");
+    }
+
+    new Timer(attackCooldown, e -> attacking = false).start();
+}
+
 
 
 
@@ -165,6 +198,9 @@ public class Player {
     public void setMoveDirection(Direction direction) {
         this.moveDirection = direction;
     }
+    public void specialAttackBuff(double amount){
+        specialAttackBar.addSpecial(amount);
+    }
 
     public Direction getMoveDirection() {
         return moveDirection;
@@ -182,7 +218,26 @@ public class Player {
         }
     }
 
+    public int getCurrentHealth() {
+        return currentHealth;
+    }
+    public void reset() {
+        this.currentHealth = maxHealth;
+        this.specialAttackBar.resetSpecial();
 
+        if (isPlayer1) {
+            this.x = 100;
+            this.direction = Direction.RIGHT;
+        } else {
+            this.x = 900;
+            this.direction = Direction.LEFT;
+        }
+
+        this.attacking = false;
+        this.moveDirection = null;
+        this.currentImage = loadImage(type == 1 ? "boris_1.png" : "dvora_1.png");
+
+    }
 
 }
 
