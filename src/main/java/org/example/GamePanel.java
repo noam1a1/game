@@ -29,6 +29,12 @@ public class GamePanel extends JPanel {
     private boolean roundActive = true;
     private JLabel roundLabel;
     private boolean roundStarting = false;
+    private static final Color PLAYER1_WIN_COLOR = new Color(107, 177, 124); // ירוק 33cc66
+    private static final Color PLAYER2_WIN_COLOR = new Color(206, 84, 51); // אדום ef441e
+    private PausePanel pausePanel;
+    private boolean gamePaused = false;
+    private GameManager manager;
+
 
 
 
@@ -36,6 +42,7 @@ public class GamePanel extends JPanel {
 
     public GamePanel(GameManager manager, PlayerSelection selection) {
         this.selection = selection;
+        this.manager = manager;
         this.setLayout(null);
         setFocusable(true);
         ARENA_BG = new ImageIcon(getClass().getResource("/images/ArenaBG.png")).getImage();
@@ -68,7 +75,7 @@ public class GamePanel extends JPanel {
         add(roundLabel);
 
         startPotionSpawner();
-        resetRound();
+        resetRound(Color.WHITE);
 
 
         aiThread = new Thread(() -> {
@@ -76,14 +83,15 @@ public class GamePanel extends JPanel {
             while (aiRunning) {
                 long now = System.currentTimeMillis();
 
-                if (now - lastDecisionTime > 300) {
+                if (!roundStarting && !gamePaused && now - lastDecisionTime > 300) {
                     decideDirection();
                     lastDecisionTime = now;
                 }
 
-                if (!roundStarting) {
+                if (!roundStarting && !gamePaused) {
                     player2.moveSmooth();
                 }
+
                 repaint();
 
                 try {
@@ -96,9 +104,15 @@ public class GamePanel extends JPanel {
         aiThread.start();
 
 
+
         addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (roundStarting) return;
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    togglePause();
+                    return;
+                }
+                if (roundStarting || gamePaused) return;
+
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_LEFT -> {
                         player1.moveLeft();
@@ -114,14 +128,24 @@ public class GamePanel extends JPanel {
                     case KeyEvent.VK_Q -> player1.attack(player2);
                     case KeyEvent.VK_R -> player1.specialAttack(player2);
                     case KeyEvent.VK_V -> player1.specialAttackBuff(0.2);
+                    case KeyEvent.VK_E -> player1.startDefense();
+
+
 
 
                 }
                 repaint();
                 checkRoundEnd();
+            }
+            public void keyReleased(KeyEvent e){
+                if (e.getKeyCode() == KeyEvent.VK_E){
+                    player1.stopDefense();
+                }
+
 
             }
         });
+
         SwingUtilities.invokeLater(this::requestFocusInWindow);
 
 
@@ -169,8 +193,9 @@ public class GamePanel extends JPanel {
         potionSpawnerThread = new Thread(() -> {
             while (spawnerRunning) {
                 int time = random.nextInt(9000 - 5000 + 1) + 5000;
-                if (potions.size() < 4) {
+                if (!gamePaused && potions.size() < 4) {
                     spawnRandomPotion();
+                    repaint();
                 }
                 try {
                     Thread.sleep(time);
@@ -204,9 +229,20 @@ public class GamePanel extends JPanel {
         int distance = player2.getCenterX() - player1.getCenterX();
         boolean makeMistake = random.nextInt(100) < 15;
         boolean chooseIdle = random.nextInt(100) < 10;
+        boolean shouldDefend = random.nextInt(100) < 8; // 8% להיכנס להגנה
+        boolean useSpecial = random.nextInt(100) < 12;
 
-        if (roundStarting) return;
+        if (gamePaused || roundStarting) return;
 
+        if (shouldDefend && !player2.isDefending()) {
+            player2.startDefense();
+            new Timer(800, e -> player2.stopDefense()).start();
+            return;
+        }
+        if (useSpecial && player2.canUseSpecial()) {
+            player2.specialAttack(player1);
+            return;
+        }
         if (chooseIdle) {
             player2.setMoveDirection(null);
             return;
@@ -239,13 +275,13 @@ public class GamePanel extends JPanel {
         if (player1.getCurrentHealth() <= 0) {
             player2Score++;
             roundActive = false;
-            updateScoreLabel(Color.RED);
+            updateScoreLabel(PLAYER2_WIN_COLOR);
             System.out.println("שחקן 2 ניצח ראונד!");
             checkGameEnd();
         } else if (player2.getCurrentHealth() <= 0) {
             player1Score++;
             roundActive = false;
-            updateScoreLabel(Color.GREEN);
+            updateScoreLabel(PLAYER1_WIN_COLOR);
             System.out.println("שחקן 1 ניצח ראונד!");
             checkGameEnd();
         }
@@ -258,13 +294,14 @@ public class GamePanel extends JPanel {
             JOptionPane.showMessageDialog(this, "שחקן 2 ניצח את המשחק!");
             resetGame();
         } else {
-            resetRound();
+            Color roundWinnerColor = (player1.getCurrentHealth() <= 0) ? PLAYER2_WIN_COLOR : PLAYER1_WIN_COLOR;
+            resetRound(roundWinnerColor);
         }
     }
-    private void resetRound() {
+    private void resetRound(Color color) {
         player1.reset();
         player2.reset();
-        updateScoreLabel();
+        updateScoreLabel(color);
         roundActive = true;
         showRoundLabel();
     }
@@ -273,11 +310,11 @@ public class GamePanel extends JPanel {
         player2Score = 0;
         roundStarting = true;
         showRoundLabel();
-        score.setText(player1Score + " : " + player2Score);
+        score.setText("0 : 0");
         score.setForeground(Color.WHITE);
         score.repaint();
 
-        resetRound();
+        resetRound(Color.WHITE);
     }
     private void updateScoreLabel(Color color) {
         score.setText(player1Score + " : " + player2Score);
@@ -332,5 +369,27 @@ public class GamePanel extends JPanel {
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(1080, 720);
+    }
+    private void togglePause() {
+        if (!gamePaused) {
+            gamePaused = true;
+            pausePanel = new PausePanel(manager, this);
+            add(pausePanel);
+            setComponentZOrder(pausePanel, 0);
+            pausePanel.repaint();
+            pausePanel.revalidate();
+        } else {
+            resumeGame();
+        }
+    }
+
+    public void resumeGame() {
+        if (pausePanel != null) {
+            remove(pausePanel);
+            pausePanel = null;
+        }
+        gamePaused = false;
+        requestFocusInWindow();
+        repaint();
     }
 }

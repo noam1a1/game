@@ -21,6 +21,8 @@ public class Player {
     private final int attackDamage = 10;
     private Direction moveDirection = null;
     private boolean isPlayer1;
+    private boolean defending = false;
+
 
 
 
@@ -86,6 +88,11 @@ public class Player {
     }
 
     public void takeDamage(int amount) {
+        if (defending) {
+            System.out.println(name + " חסם את המתקפה!");
+            return;
+        }
+
         currentHealth -= amount;
         if (currentHealth < 0) currentHealth = 0;
     }
@@ -107,6 +114,7 @@ public class Player {
         if (getAttackBox().intersects(target.getHitbox())) {
             target.takeDamage(attackDamage);
             specialAttackBar.addSpecial(0.2);
+            SoundPlayer.playSound("punch/1.wav");
             System.out.println(name + " פגע ב-" + target.getName() + "!");
         } else {
             System.out.println(name + " פספס!");
@@ -237,6 +245,21 @@ public class Player {
         this.moveDirection = null;
         this.currentImage = loadImage(type == 1 ? "boris_1.png" : "dvora_1.png");
 
+    }
+    public void startDefense() {
+        defending = true;
+        // תוכל להחליף תמונה נניח ל-defense.png
+    }
+
+    public void stopDefense() {
+        defending = false;
+        // תחזיר תמונה רגילה אם שינית
+    }
+    public boolean canUseSpecial() {
+        return specialAttackBar.canSAttack();
+    }
+    public boolean isDefending() {
+        return defending;
     }
 
 }

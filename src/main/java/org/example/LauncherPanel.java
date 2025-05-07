@@ -21,7 +21,10 @@ public class LauncherPanel extends JPanel {
         startButton.setFocusPainted(false);
         startButton.setOpaque(false);
         startButton.setRolloverIcon(startHoverIcon);
-        startButton.addActionListener(e -> manager.showScreen("select"));
+        startButton.addActionListener(e -> {
+            SoundPlayer.playSound("click.ogg");
+            manager.showScreen("select");
+        });
         this.add(startButton);
 
         JButton howToPlayButton = new JButton(howToPlayIcon);
@@ -31,7 +34,10 @@ public class LauncherPanel extends JPanel {
         howToPlayButton.setFocusPainted(false);
         howToPlayButton.setOpaque(false);
         howToPlayButton.setRolloverIcon(howToPlayHoverIcon);
-        howToPlayButton.addActionListener(e -> manager.showScreen("howToPlay"));
+        howToPlayButton.addActionListener(e -> {
+            SoundPlayer.playSound("click.ogg");
+            manager.showScreen("howToPlay");
+        });
         this.add(howToPlayButton);
     }
 
