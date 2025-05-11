@@ -117,7 +117,7 @@ public class Player {
 
     public void takeDamage(int amount) {
         if (defending) {
-            System.out.println(name + " חסם את המתקפה!");
+            System.out.println(name + " Blocked");
             return;
         }
 
@@ -147,10 +147,10 @@ public class Player {
             target.takeDamage(attackDamage);
             specialAttackBar.addSpecial(0.2);
             SoundPlayer.playSound("punch/" + num + ".wav");
-            System.out.println(name + " פגע ב-" + target.getName() + "!");
+            System.out.println(name + " hit" + target.getName() + "!");
 
         } else {
-            System.out.println(name + " פספס!");
+            System.out.println(name + " Missed");
         }
         new Thread(() -> {
             try {
@@ -165,20 +165,20 @@ public class Player {
     }
 
  public void specialAttack(Player target) {
-    System.out.println("ניסיתי מתקפה מיוחדת");
+    System.out.println("Trying a special attack");
 
     long currentTime = System.currentTimeMillis();
 
     if (attacking) {
-        System.out.println("כבר תוקף!");
+        System.out.println("Attacking already.");
         return;
     }
     if (currentTime - lastAttackTime < attackCooldown) {
-        System.out.println("קירור לא נגמר!");
+        System.out.println("Cooldown isn't over");
         return;
     }
     if (!specialAttackBar.canSAttack()) {
-        System.out.println("הבר לא מלא!");
+        System.out.println("Bar isn't full");
         return;
     }
 
@@ -197,9 +197,9 @@ public class Player {
             GamePanel.addEffect(new AttackEffect(effectX, effectY));
         }
         SoundPlayer.playSound("B SA.wav");
-        System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
+        System.out.println(name + " Used a special attack on " + target.getName() + "!");
     } else {
-        System.out.println(name + " פספס במתקפה מיוחדת!");
+        System.out.println(name + " Missed a special attack");
     }
 
     new Timer(attackCooldown, e -> attacking = false).start();
@@ -214,7 +214,7 @@ public class Player {
             int centerX = target.getCenterX() - 20;
             FallingObject obj = new FallingObject(centerX, 0);
             worldObjects.add(obj);
-            System.out.println(name + " זימנה חפץ שנופל!");
+            System.out.println(name + " Summoned falling object");
         }
     }
 
@@ -227,7 +227,7 @@ public class Player {
         String path = "/images/" + imageName + "/" + filename;
         URL resource = getClass().getResource(path);
         if (resource == null) {
-            System.err.println("בעיה: תמונה לא נמצאה בנתיב: " + path);
+            System.err.println("Error: picture isnt in path " + path);
             return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         }
         return new ImageIcon(resource).getImage();

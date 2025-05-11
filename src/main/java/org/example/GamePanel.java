@@ -194,10 +194,10 @@ public class GamePanel extends JPanel {
                 SoundPlayer.playSound("POTIONS.wav");
                 if (potion.getType() == PotionType.HEALTH) {
                     player1.buff(20);
-                    System.out.println("אספת שיקוי חיים!");
+                    System.out.println("Picked up health potion");
                 } else if (potion.getType() == PotionType.SPECIAL) {
                     player1.specialAttackBuff(1.0);
-                    System.out.println("אספת שיקוי מיוחד!");
+                    System.out.println("Picked up special potion");
                 }
                 iterator.remove();
             }
@@ -302,13 +302,13 @@ public class GamePanel extends JPanel {
             player2Score++;
             roundActive = false;
             updateScoreLabel(PLAYER2_WIN_COLOR);
-            System.out.println("שחקן 2 ניצח ראונד!");
+            System.out.println("Player 2 has won a round!");
             checkGameEnd();
         } else if (player2.getCurrentHealth() <= 0) {
             player1Score++;
             roundActive = false;
             updateScoreLabel(PLAYER1_WIN_COLOR);
-            System.out.println("שחקן 1 ניצח ראונד!");
+            System.out.println("Player 1 has won a round!");
             checkGameEnd();
         }
     }
