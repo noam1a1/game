@@ -1,15 +1,14 @@
 package org.example;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.ArrayList;
-import org.example.FallingObject;
-
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
+
+import org.example.FallingObject;
 
 public class Player {
     private int x, y;
@@ -35,6 +34,7 @@ public class Player {
     private Image baseImage;
     private final Map<String, Integer> imageOffsets = new HashMap<>();
     private String currentImageName;
+    Random random = new Random();
 
 
 
@@ -61,9 +61,9 @@ public class Player {
         baseImage = loadImage(imageName + "_1.png");
         this.currentImage = baseImage;
 
-        imageOffsets.put("Boris_1.png", 0);       // עמידה רגילה
-        imageOffsets.put("Boris_2.png", -91);     // התקפה
-        imageOffsets.put("Boris_3.png", 0);     // מתקפה מיוחדת
+        imageOffsets.put("Boris_1.png", 0);
+        imageOffsets.put("Boris_2.png", -91);
+        imageOffsets.put("Boris_3.png", 0);
 
         imageOffsets.put("Dvora_1.png", 0);
         imageOffsets.put("Dvora_2.png", -49);
@@ -88,7 +88,7 @@ public class Player {
     }
 
     public void draw(Graphics g) {
-        String currentImageName = getCurrentImageName(); // תצטרך לשמור את שם הקובץ האחרון
+        String currentImageName = getCurrentImageName();
         int offsetX = imageOffsets.getOrDefault(currentImageName, 0);
 
 
@@ -143,9 +143,10 @@ public class Player {
 
 
         if (getAttackBox().intersects(target.getHitbox())) {
+            int num = random.nextInt(2) + 1;
             target.takeDamage(attackDamage);
             specialAttackBar.addSpecial(0.2);
-            SoundPlayer.playSound("punch/1.wav");
+            SoundPlayer.playSound("punch/" + num + ".wav");
             System.out.println(name + " פגע ב-" + target.getName() + "!");
 
         } else {
@@ -195,6 +196,7 @@ public class Player {
             int effectY = target.getY();
             GamePanel.addEffect(new AttackEffect(effectX, effectY));
         }
+        SoundPlayer.playSound("B SA.wav");
         System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
     } else {
         System.out.println(name + " פספס במתקפה מיוחדת!");
@@ -208,7 +210,8 @@ public class Player {
 
         if (this.type==2) {
             this.currentImage =loadImage(this.imageName+"_3.png");
-            int centerX = target.getCenterX() - 20; // נקודת פגיעה מקורבת
+            SoundPlayer.playSound("D SA.wav");
+            int centerX = target.getCenterX() - 20;
             FallingObject obj = new FallingObject(centerX, 0);
             worldObjects.add(obj);
             System.out.println(name + " זימנה חפץ שנופל!");
@@ -220,12 +223,12 @@ public class Player {
 
 
     private Image loadImage(String filename) {
-        this.currentImageName = filename;  // שמירה של שם התמונה הנוכחית
+        this.currentImageName = filename;
         String path = "/images/" + imageName + "/" + filename;
         URL resource = getClass().getResource(path);
         if (resource == null) {
             System.err.println("בעיה: תמונה לא נמצאה בנתיב: " + path);
-            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB); // placeholder שקוף
+            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         }
         return new ImageIcon(resource).getImage();
     }
@@ -293,12 +296,12 @@ public class Player {
     }
     public void startDefense() {
         defending = true;
-        // תוכל להחליף תמונה נניח ל-defense.png
+
     }
 
     public void stopDefense() {
         defending = false;
-        // תחזיר תמונה רגילה אם שינית
+
     }
     public boolean canUseSpecial() {
         return specialAttackBar.canSAttack();

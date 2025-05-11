@@ -22,7 +22,7 @@ public class LauncherPanel extends JPanel {
         startButton.setOpaque(false);
         startButton.setRolloverIcon(startHoverIcon);
         startButton.addActionListener(e -> {
-            SoundPlayer.playSound("click.ogg");
+            SoundPlayer.playSound("click.wav");
             manager.showScreen("select");
         });
         this.add(startButton);
@@ -35,7 +35,7 @@ public class LauncherPanel extends JPanel {
         howToPlayButton.setOpaque(false);
         howToPlayButton.setRolloverIcon(howToPlayHoverIcon);
         howToPlayButton.addActionListener(e -> {
-            SoundPlayer.playSound("click.ogg");
+            SoundPlayer.playSound("click.wav");
             manager.showScreen("howToPlay");
         });
         this.add(howToPlayButton);

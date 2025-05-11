@@ -29,8 +29,8 @@ public class GamePanel extends JPanel {
     private boolean roundActive = true;
     private JLabel roundLabel;
     private boolean roundStarting = false;
-    private static final Color PLAYER1_WIN_COLOR = new Color(107, 177, 124); // ירוק 33cc66
-    private static final Color PLAYER2_WIN_COLOR = new Color(206, 84, 51); // אדום ef441e
+    private static final Color PLAYER1_WIN_COLOR = new Color(107, 177, 124);
+    private static final Color PLAYER2_WIN_COLOR = new Color(206, 84, 51);
     private PausePanel pausePanel;
     private boolean gamePaused = false;
     private GameManager manager;
@@ -92,7 +92,7 @@ public class GamePanel extends JPanel {
                 for (FallingObject obj : fallingObjects) {
                     obj.update();
                     if (obj.isActive() && obj.getBounds().intersects(player2.getHitbox())) {
-                        player2.takeDamage(30); // או כל כמות נזק שתרצה
+                        player2.takeDamage(30);
                         obj.deactivate();
                     }
                 }
@@ -180,17 +180,18 @@ public class GamePanel extends JPanel {
             effect.draw(g);
         }
         effects.removeIf(e -> !e.isActive());
-        for (FallingObject obj : fallingObjects) {
+        for (FallingObject obj : new ArrayList<>(fallingObjects)) {
             obj.draw(g);
         }
     }
     private void checkPotionCollision() {
-        Rectangle playerBounds = player1.getHitbox(); // יש לו getHitbox()
+        Rectangle playerBounds = player1.getHitbox();
 
         Iterator<Potion> iterator = potions.iterator();
         while (iterator.hasNext()) {
             Potion potion = iterator.next();
             if (playerBounds.intersects(potion.getBounds())) {
+                SoundPlayer.playSound("POTIONS.wav");
                 if (potion.getType() == PotionType.HEALTH) {
                     player1.buff(20);
                     System.out.println("אספת שיקוי חיים!");
@@ -254,7 +255,7 @@ public class GamePanel extends JPanel {
         int distance = player2.getCenterX() - player1.getCenterX();
         boolean makeMistake = random.nextInt(100) < 15;
         boolean chooseIdle = random.nextInt(100) < 10;
-        boolean shouldDefend = random.nextInt(100) < 8; // 8% להיכנס להגנה
+        boolean shouldDefend = random.nextInt(100) < 8;
         boolean useSpecial = random.nextInt(100) < 12;
 
         if (gamePaused || roundStarting) return;
@@ -313,11 +314,11 @@ public class GamePanel extends JPanel {
     }
     private void checkGameEnd() {
         if (player1Score >= WIN_SCORE) {
-            JOptionPane.showMessageDialog(this, "שחקן 1 ניצח את המשחק!");
-            resetGame();
+            manager.showWinScreen(player1.getType());
+            stopGame();
         } else if (player2Score >= WIN_SCORE) {
-            JOptionPane.showMessageDialog(this, "שחקן 2 ניצח את המשחק!");
-            resetGame();
+            manager.showWinScreen(player2.getType());
+            stopGame();
         } else {
             Color roundWinnerColor = (player1.getCurrentHealth() <= 0) ? PLAYER2_WIN_COLOR : PLAYER1_WIN_COLOR;
             resetRound(roundWinnerColor);
@@ -421,5 +422,10 @@ public class GamePanel extends JPanel {
         if (instance != null) {
             instance.effects.add(effect);
         }
+    }
+
+    public void stopGame() {
+        aiRunning = false;
+        spawnerRunning = false;
     }
 }

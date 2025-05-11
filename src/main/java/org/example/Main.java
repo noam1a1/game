@@ -14,6 +14,7 @@ public class Main {
         window.setResizable(false);
         window.pack();
         window.setLocationRelativeTo(null);
+        SoundPlayer.playSound("ST.wav", -20.0f);
 
         window.setVisible(true);
 

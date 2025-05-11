@@ -14,13 +14,13 @@ public class FallingObject {
         this.x = targetX;
         this.y = startY;
         this.targetX = targetX;
-        this.image = new ImageIcon(getClass().getResource("/images/effects/Suitecase.png")).getImage(); // תמונה של החפץ
+        this.image = new ImageIcon(getClass().getResource("/images/effects/Suitecase.png")).getImage();
     }
 
     public void update() {
         if (!active) return;
         y += fallSpeed;
-        if (y > 600) { // אם עבר את הרצפה
+        if (y > 600) {
             active = false;
         }
     }

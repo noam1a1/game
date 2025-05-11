@@ -20,7 +20,7 @@ public class HowToPlayPanel extends JPanel {
         backButton.setOpaque(false);
         backButton.setRolloverIcon(backHoverIcon);
         backButton.addActionListener(e -> {
-            SoundPlayer.playSound("click.ogg");
+            SoundPlayer.playSound("click.wav");
             manager.showScreen("launcher");
         });
         this.add(backButton);

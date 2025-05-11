@@ -21,7 +21,6 @@ public class GameManager extends JPanel {
         launcher = new LauncherPanel(this);
         characterSelectPanel = new CharacterSelectPanel(this, selection);
         howToPlayPanel = new HowToPlayPanel(this);
-
         add(launcher, "launcher");
         add(howToPlayPanel, "howToPlay");
         add(characterSelectPanel, "select");
@@ -51,5 +50,13 @@ public class GameManager extends JPanel {
         if (current != null) {
             SwingUtilities.invokeLater(current::requestFocusInWindow);
         }
+    }
+    public void showWinScreen(int winnerType) {
+        String winner = (winnerType == 1) ? "boris" : "dvora";
+        WinPanel winPanel = new WinPanel(this, winner);
+        add(winPanel, "win");
+        cardLayout.show(this, "win");
+
+        SwingUtilities.invokeLater(winPanel::requestFocusInWindow);
     }
 }

@@ -29,7 +29,11 @@ public class CharacterSelectPanel extends JPanel {
         startButton.setFocusPainted(false);
         startButton.setOpaque(false);
         startButton.setRolloverIcon(startHoverIcon);
-        startButton.addActionListener(e -> manager.showScreen("game"));
+        startButton.addActionListener(e -> {
+            SoundPlayer.playSound("click.wav");
+            manager.showScreen("game");
+        });
+
         this.add(startButton);
 
         JButton player1SelectBorisButton = new JButton(player1SelectBorisIcon);
@@ -41,6 +45,7 @@ public class CharacterSelectPanel extends JPanel {
         player1SelectBorisButton.setRolloverIcon(player1SelectBorisHoverIcon);
         player1SelectBorisButton.addActionListener(e -> {
             selection.setPlayer1Type(1);
+            SoundPlayer.playSound("click.wav");
             System.out.println("player 1 = boris");        });
         this.add(player1SelectBorisButton);
 
@@ -53,6 +58,7 @@ public class CharacterSelectPanel extends JPanel {
         player1SelectDvoraButton.setRolloverIcon(player1SelectDvoraHoverIcon);
         player1SelectDvoraButton.addActionListener(e -> {
             selection.setPlayer1Type(2);
+            SoundPlayer.playSound("click.wav");
             System.out.println("player 1 = Dvora");        });
         this.add(player1SelectDvoraButton);
 
@@ -65,6 +71,7 @@ public class CharacterSelectPanel extends JPanel {
         player2SelectBorisButton.setRolloverIcon(player2SelectBorisHoverIcon);
         player2SelectBorisButton.addActionListener(e -> {
             selection.setPlayer2Type(1);
+            SoundPlayer.playSound("click.wav");
             System.out.println("player 2 = boris");        });
         this.add(player2SelectBorisButton);
 
@@ -77,6 +84,7 @@ public class CharacterSelectPanel extends JPanel {
         player2SelectDvoraButton.setRolloverIcon(player2SelectDvoraHoverIcon);
         player2SelectDvoraButton.addActionListener(e -> {
             selection.setPlayer2Type(2);
+            SoundPlayer.playSound("click.wav");
             System.out.println("player 2 = Dvora");        });
         this.add(player2SelectDvoraButton);
     }

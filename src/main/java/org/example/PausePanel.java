@@ -19,7 +19,11 @@ public class PausePanel extends JPanel {
         resumeButton.setFocusPainted(false);
         resumeButton.setOpaque(false);
         resumeButton.setRolloverIcon(resumeHoverIcon);
-        resumeButton.addActionListener(e -> gamePanel.resumeGame());
+        resumeButton.addActionListener(e ->{
+            SoundPlayer.playSound("click.wav");
+            gamePanel.resumeGame();
+        });
+
         this.add(resumeButton);
 
         JButton homeButton = new JButton(homeIcon);
@@ -29,7 +33,10 @@ public class PausePanel extends JPanel {
         homeButton.setFocusPainted(false);
         homeButton.setOpaque(false);
         homeButton.setRolloverIcon(homeHoverIcon);
-        homeButton.addActionListener(e -> manager.showScreen("launcher"));
+        homeButton.addActionListener(e ->{
+            SoundPlayer.playSound("click.wav");
+            manager.showScreen("launcher");
+        });
         this.add(homeButton);
 
         setBounds(0, 0, 1080, 720);
