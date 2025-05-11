@@ -34,6 +34,10 @@ public class GamePanel extends JPanel {
     private PausePanel pausePanel;
     private boolean gamePaused = false;
     private GameManager manager;
+    private List<AttackEffect> effects = new ArrayList<>();
+    private final List<FallingObject> fallingObjects = new ArrayList<>();
+    private static GamePanel instance;
+
 
 
 
@@ -41,6 +45,7 @@ public class GamePanel extends JPanel {
 
 
     public GamePanel(GameManager manager, PlayerSelection selection) {
+        instance = this;
         this.selection = selection;
         this.manager = manager;
         this.setLayout(null);
@@ -83,6 +88,14 @@ public class GamePanel extends JPanel {
             while (aiRunning) {
                 long now = System.currentTimeMillis();
 
+                fallingObjects.removeIf(obj -> !obj.isActive());
+                for (FallingObject obj : fallingObjects) {
+                    obj.update();
+                    if (obj.isActive() && obj.getBounds().intersects(player2.getHitbox())) {
+                        player2.takeDamage(30); // או כל כמות נזק שתרצה
+                        obj.deactivate();
+                    }
+                }
                 if (!roundStarting && !gamePaused && now - lastDecisionTime > 300) {
                     decideDirection();
                     lastDecisionTime = now;
@@ -126,8 +139,13 @@ public class GamePanel extends JPanel {
                     case KeyEvent.VK_X -> player1.takeDamage(5);
                     case KeyEvent.VK_C -> player1.buff(5);
                     case KeyEvent.VK_Q -> player1.attack(player2);
-                    case KeyEvent.VK_R -> player1.specialAttack(player2);
-                    case KeyEvent.VK_V -> player1.specialAttackBuff(0.2);
+                    case KeyEvent.VK_R -> {
+                        if (player1.getType()==2) {
+                            player1.specialAttack(player2, fallingObjects);
+                        } else {
+                            player1.specialAttack(player2);
+                        }
+                    }                    case KeyEvent.VK_V -> player1.specialAttackBuff(0.2);
                     case KeyEvent.VK_E -> player1.startDefense();
 
 
@@ -157,6 +175,13 @@ public class GamePanel extends JPanel {
         player2.draw(g);
         for (Potion potion : potions) {
             potion.draw(g);
+        }
+        for (AttackEffect effect : effects) {
+            effect.draw(g);
+        }
+        effects.removeIf(e -> !e.isActive());
+        for (FallingObject obj : fallingObjects) {
+            obj.draw(g);
         }
     }
     private void checkPotionCollision() {
@@ -391,5 +416,10 @@ public class GamePanel extends JPanel {
         gamePaused = false;
         requestFocusInWindow();
         repaint();
+    }
+    public static void addEffect(AttackEffect effect) {
+        if (instance != null) {
+            instance.effects.add(effect);
+        }
     }
 }

@@ -2,6 +2,14 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.util.ArrayList;
+import org.example.FallingObject;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Player {
     private int x, y;
@@ -22,6 +30,12 @@ public class Player {
     private Direction moveDirection = null;
     private boolean isPlayer1;
     private boolean defending = false;
+    private String imageName;
+    private boolean stunned = false;
+    private Image baseImage;
+    private final Map<String, Integer> imageOffsets = new HashMap<>();
+    private String currentImageName;
+
 
 
 
@@ -32,29 +46,35 @@ public class Player {
         this.currentHealth = maxHealth;
         this.type = type;
         this.speed = 5;
-        String imageName;
+
         if (type==1){
             name = "BORIS";
-            imageName = "boris";
+            imageName = "Boris";
         } else {
             name = "DVORA";
-            imageName = "dvora";
+            imageName = "Dvora";
         }
         this.direction = Direction.RIGHT;
-        this.currentImage = loadImage(imageName + "_1.png");
         this.healthBar = new HealthBar(() -> this.currentHealth, () -> this.maxHealth);
         this.specialAttackBar = new SpecialAttackBar();
         this.isPlayer1 = isPlayer1;
+        baseImage = loadImage(imageName + "_1.png");
+        this.currentImage = baseImage;
 
+        imageOffsets.put("Boris_1.png", 0);       // עמידה רגילה
+        imageOffsets.put("Boris_2.png", -91);     // התקפה
+        imageOffsets.put("Boris_3.png", 0);     // מתקפה מיוחדת
 
-
+        imageOffsets.put("Dvora_1.png", 0);
+        imageOffsets.put("Dvora_2.png", -49);
+        imageOffsets.put("Dvora_3.png", -15);
 
     }
 
     public void moveLeft() {
         x -= speed;
         direction = Direction.LEFT;
-        currentImage = loadImage("boris_1.png");
+        currentImage = loadImage(this.imageName+"_1.png");
         if (x < 0) x = 0;
 
     }
@@ -62,18 +82,26 @@ public class Player {
     public void moveRight() {
         x += speed;
         direction = Direction.RIGHT;
-        currentImage = loadImage("boris_1.png");
+        currentImage = loadImage(this.imageName+"_1.png");
         if (x > 1080-164) x = 1080-164;
 
     }
 
     public void draw(Graphics g) {
+        String currentImageName = getCurrentImageName(); // תצטרך לשמור את שם הקובץ האחרון
+        int offsetX = imageOffsets.getOrDefault(currentImageName, 0);
+
+
         if (direction == Direction.LEFT) {
             Graphics2D g2 = (Graphics2D) g;
-            g2.drawImage(currentImage, x + currentImage.getWidth(null), y, -currentImage.getWidth(null), currentImage.getHeight(null), null); // הפוך
+            g2.drawImage(
+                    currentImage,
+                    x + offsetX + currentImage.getWidth(null), y,
+                    -currentImage.getWidth(null), currentImage.getHeight(null),
+                    null
+            );
         } else {
             g.drawImage(currentImage, x, y, null);
-
         }
 
         if (this.isPlayer1){
@@ -110,42 +138,31 @@ public class Player {
         attacking = true;
         lastAttackTime = currentTime;
 
+        currentImage = loadImage(this.imageName+"_2.png");
+
+
 
         if (getAttackBox().intersects(target.getHitbox())) {
             target.takeDamage(attackDamage);
             specialAttackBar.addSpecial(0.2);
             SoundPlayer.playSound("punch/1.wav");
             System.out.println(name + " פגע ב-" + target.getName() + "!");
+
         } else {
             System.out.println(name + " פספס!");
         }
+        new Thread(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            currentImage = loadImage(this.imageName+"_1.png");
+        }).start();
 
         new Timer(attackCooldown, e -> attacking = false).start();
     }
 
-//    public void specialAttack(Player target) {
-//        long currentTime = System.currentTimeMillis();
-//
-//        if (attacking) return;
-//        if (currentTime - lastAttackTime < attackCooldown) return;
-//        if (specialAttackBar.canSAttack()) return;
-//
-//        attacking = true;
-//        lastAttackTime = currentTime;
-//
-//        if (getAttackBox().intersects(target.getHitbox())) {
-//            int specialDamage = attackDamage * 3;
-//            target.takeDamage(specialDamage);
-//            this.specialAttackBar.decreaseSpecial();
-//            System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
-//        } else {
-//            System.out.println(name + " פספס במתקפה מיוחדת!");
-//        }
-//
-//
-//
-//        new Timer(attackCooldown, e -> attacking = false).start();
-//    }
  public void specialAttack(Player target) {
     System.out.println("ניסיתי מתקפה מיוחדת");
 
@@ -170,7 +187,14 @@ public class Player {
     if (getAttackBox().intersects(target.getHitbox())) {
         int specialDamage = attackDamage * 3;
         target.takeDamage(specialDamage);
+        target.stun(1000);
         specialAttackBar.decreaseSpecial();
+        if (this.type == 1 && isPlayer1) {
+            this.currentImage =loadImage(this.imageName+"_3.png");
+            int effectX = target.getX();
+            int effectY = target.getY();
+            GamePanel.addEffect(new AttackEffect(effectX, effectY));
+        }
         System.out.println(name + " עשה מתקפה מיוחדת על " + target.getName() + "!");
     } else {
         System.out.println(name + " פספס במתקפה מיוחדת!");
@@ -178,12 +202,32 @@ public class Player {
 
     new Timer(attackCooldown, e -> attacking = false).start();
 }
+    public void specialAttack(Player target, List<FallingObject> worldObjects) {
+        if (!specialAttackBar.canSAttack()) return;
+        specialAttackBar.decreaseSpecial();
+
+        if (this.type==2) {
+            this.currentImage =loadImage(this.imageName+"_3.png");
+            int centerX = target.getCenterX() - 20; // נקודת פגיעה מקורבת
+            FallingObject obj = new FallingObject(centerX, 0);
+            worldObjects.add(obj);
+            System.out.println(name + " זימנה חפץ שנופל!");
+        }
+    }
+
 
 
 
 
     private Image loadImage(String filename) {
-        return new ImageIcon(getClass().getResource("/images/Boris/"+filename)).getImage();
+        this.currentImageName = filename;  // שמירה של שם התמונה הנוכחית
+        String path = "/images/" + imageName + "/" + filename;
+        URL resource = getClass().getResource(path);
+        if (resource == null) {
+            System.err.println("בעיה: תמונה לא נמצאה בנתיב: " + path);
+            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB); // placeholder שקוף
+        }
+        return new ImageIcon(resource).getImage();
     }
 
     public String getName() {
@@ -215,6 +259,7 @@ public class Player {
     }
 
     public void moveSmooth() {
+        if (stunned) return;
         if (moveDirection == Direction.LEFT) {
             x -= speed;
             direction = Direction.LEFT;
@@ -262,5 +307,35 @@ public class Player {
         return defending;
     }
 
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public boolean isStunned() {
+        return stunned;
+    }
+
+    public void stun(int durationMs) {
+        stunned = true;
+        new Thread(() -> {
+            try {
+                Thread.sleep(durationMs);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            stunned = false;
+        }).start();
+    }
+
+    public int getType() {
+        return type;
+    }
+    public String getCurrentImageName() {
+        return currentImageName;
+    }
 }
 
