@@ -164,46 +164,46 @@ public class Player {
         new Timer(attackCooldown, e -> attacking = false).start();
     }
 
- public void specialAttack(Player target) {
-    System.out.println("Trying a special attack");
+    public void specialAttack(Player target) {
+        System.out.println("Trying a special attack");
 
-    long currentTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
 
-    if (attacking) {
-        System.out.println("Attacking already.");
-        return;
-    }
-    if (currentTime - lastAttackTime < attackCooldown) {
-        System.out.println("Cooldown isn't over");
-        return;
-    }
-    if (!specialAttackBar.canSAttack()) {
-        System.out.println("Bar isn't full");
-        return;
-    }
-
-    attacking = true;
-    lastAttackTime = currentTime;
-
-    if (getAttackBox().intersects(target.getHitbox())) {
-        int specialDamage = attackDamage * 3;
-        target.takeDamage(specialDamage);
-        target.stun(1000);
-        specialAttackBar.decreaseSpecial();
-        if (this.type == 1 && isPlayer1) {
-            this.currentImage =loadImage(this.imageName+"_3.png");
-            int effectX = target.getX();
-            int effectY = target.getY();
-            GamePanel.addEffect(new AttackEffect(effectX, effectY));
+        if (attacking) {
+            System.out.println("Attacking already.");
+            return;
         }
-        SoundPlayer.playSound("B SA.wav");
-        System.out.println(name + " Used a special attack on " + target.getName() + "!");
-    } else {
-        System.out.println(name + " Missed a special attack");
-    }
+        if (currentTime - lastAttackTime < attackCooldown) {
+            System.out.println("Cooldown isn't over");
+            return;
+        }
+        if (!specialAttackBar.canSAttack()) {
+            System.out.println("Bar isn't full");
+            return;
+        }
 
-    new Timer(attackCooldown, e -> attacking = false).start();
-}
+        attacking = true;
+        lastAttackTime = currentTime;
+
+        if (getAttackBox().intersects(target.getHitbox())) {
+            int specialDamage = attackDamage * 3;
+            target.takeDamage(specialDamage);
+            target.stun(1000);
+            specialAttackBar.decreaseSpecial();
+            if (this.type == 1 && isPlayer1) {
+                this.currentImage =loadImage(this.imageName+"_3.png");
+                int effectX = target.getX();
+                int effectY = target.getY();
+                GamePanel.addEffect(new AttackEffect(effectX, effectY));
+            }
+            SoundPlayer.playSound("B SA.wav");
+            System.out.println(name + " Used a special attack on " + target.getName() + "!");
+        } else {
+            System.out.println(name + " Missed a special attack");
+        }
+
+        new Timer(attackCooldown, e -> attacking = false).start();
+    }
     public void specialAttack(Player target, List<FallingObject> worldObjects) {
         if (!specialAttackBar.canSAttack()) return;
         specialAttackBar.decreaseSpecial();
@@ -341,4 +341,3 @@ public class Player {
         return currentImageName;
     }
 }
-
